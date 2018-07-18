@@ -71,7 +71,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the DEBUG level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
@@ -105,7 +105,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the ERROR level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
@@ -139,7 +139,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the FATAL level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
@@ -173,7 +173,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Returns the logger name which is owned by logger object.
 		#' 
 		#' @return	The name of logging object
 		getLoggerName = function ()
@@ -182,7 +182,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Returns the log level which is owned by logger object.<br>
 		#' 
 		#' @return	Log level number
 		getLogLevel = function ()
@@ -191,7 +191,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the INFO level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
@@ -225,7 +225,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Set indicated logger name into the member variable of logging object.
 		#' 
 		#' @param name	Logging object name to set
 		setLoggerName = function (name)
@@ -240,7 +240,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Set indicated log file path into the member variable of logging object.<br>
 		#' 
 		#' @param log.filepath		Log file pathname string
 		setLogFilePath = function (log.filepath)
@@ -252,7 +252,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Set indicated log level into the member variable of logging object.<br>
 		#' 
 		#' @param log.level	Predefined log level string
 		setLogLevel = function (log.level)
@@ -294,7 +294,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the TRACE level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
@@ -328,7 +328,7 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
-		#' 
+		#' Logs a message object with the WARN level.<br>
 		#' 
 		#' @param log.message	Log message string
 		#' @param log.function	Function name string to output the log message
