@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright (c) 2018, mtsmys
+# Copyright (c) 2018, Akihisa Yasuda
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -67,7 +67,7 @@ Logger <- R6::R6Class("Logger",
 		#' @return				Created new log message
 		createNewLogMessage = function (log.level, log.message, log.function, log.line)
 			{
-			return(paste("[", private$getTime(), "][", tolower(log.level), "][", log.function, ":", log.line, "][",log.message, "]", sep = ""))
+			return(paste("[", private$getTime(), "][", tolower(log.level), "]["+Sys.getpid()+"][", log.function, ":", log.line, "][",log.message, "]", sep = ""))
 			},
 
 
@@ -501,7 +501,7 @@ Logger <- R6::R6Class("Logger",
 		#' @param log.message	Log message string
 		print = function (log.message)
 			{
-			show(log.message)
+			print(log.message)
 			},
 
 
