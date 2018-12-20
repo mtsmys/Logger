@@ -367,10 +367,11 @@ Logger <- R6::R6Class("Logger",
 	# Private variables & methods
 	#===========================================================================
 	private = list(
-		file.descriptor = NULL,		# File descriptor
-		logger.name = NULL,			# The name of logger object
-		log.filepath = NULL,		# Log file pathname string
-		log.level = 0,				# Log level number
+		file.descriptor = NULL,		#' File descriptor
+		file.path = NULL,			#' File path string
+		logger.name = NULL,			#' The name of logger object
+		log.filepath = NULL,		#' Log file pathname string
+		log.level = 0,				#' Log level number
 
 
 		#' This method closes the opened file descriptor.<br>
@@ -466,6 +467,8 @@ Logger <- R6::R6Class("Logger",
 						#===== Open file descriptor in "w+" mode =====
 						private$file.descriptor <- file(file.path, open = "w+")
 						}
+					#===== Set file pathname string =====
+					private$setFilePath(file.path)
 					self$info("Now opened log file", METHOD)
 					},
 				#===== Error handling =====
@@ -505,6 +508,21 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
+		#' Set argument into the private variable as file pathname string.<br>
+		#' 
+		#' @param file.path A file pathname string
+		setFilePath = function (file.path)
+			{
+			if (is.null(file.path)==FALSE && is.character(file.path)==TRUE)
+				{
+				private$file.path <- file.path
+				}
+			else
+				{
+				}
+			},
+
+
 		#' Write the message string into log file.<br>
 		#' 
 		#' @param log.message	Log message string
@@ -536,6 +554,7 @@ Logger <- R6::R6Class("Logger",
 			#===== finalization =====
 			finally =
 				{
+				#=====  =====
 				},
 			silent = TRUE)
 			}
