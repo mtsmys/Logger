@@ -763,7 +763,7 @@ Logger <- R6::R6Class("Logger",
 #Logger$debug("getTime")
 #Logger$debug("openFile")
 #Logger$debug("printMessage")
-Logger$debug("rotateLogFile")
+#Logger$debug("rotateLogFile")
 #Logger$debug("writeMessage")
 
 
