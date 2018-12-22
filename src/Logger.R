@@ -43,6 +43,8 @@ Logger <- R6::R6Class("Logger",
 
 
 		#' Constructor.<br>
+		#' 
+		#' @param config.file
 		initialize = function ()
 			{
 			#===== Set default log level =====
@@ -67,7 +69,7 @@ Logger <- R6::R6Class("Logger",
 		#' @return				Created new log message
 		createNewLogMessage = function (log.level, log.message, log.function, log.line)
 			{
-			return(paste("[", private$getTime(), "][", tolower(log.level), "]["+Sys.getpid()+"][", log.function, ":", log.line, "][",log.message, "]", sep = ""))
+			return(paste("[", private$getTime(), "][", tolower(log.level), "][", Sys.getpid(), "][", log.function, ":", log.line, "][",log.message, "]", sep = ""))
 			},
 
 
@@ -95,7 +97,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -129,7 +131,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -163,7 +165,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -215,7 +217,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -242,13 +244,39 @@ Logger <- R6::R6Class("Logger",
 
 		#' Set indicated log file path into the member variable of logging object.<br>
 		#' 
-		#' @param log.filepath		Log file pathname string
-		setLogFilePath = function (log.filepath)
+		#' @param log.file.path		Log file pathname string
+		setLogFilePath = function (log.file.path)
 			{
-			#===== Set log file pathname string into internal variable =====
-			private$log.filepath <- log.filepath
-			#===== Open file descriptor =====
-			private$openFile(log.filepath)
+			#===== Check argument =====
+			if (is.null(log.file.path)==FALSE 
+					&& is.character(log.file.path)==TRUE)
+				{
+				tryCatch(
+					{
+					#===== Open file descriptor =====
+					private$openFile(log.file.path)
+					},
+				#===== Error handling =====
+				error = function(e)
+					{
+					private$printMessage(e$message)
+					},
+				#===== Warning handling =====
+				warning = function(e)
+					{
+					private$printMessage(e$message)
+					},
+				#===== finalization =====
+				finally =
+					{
+					},
+				silent = TRUE)
+				}
+			#===== Argument error =====
+			else
+				{
+				private$printMessage('Argument error! Indicated "log.file.path" variable is invalid')
+				}
 			},
 
 
@@ -294,6 +322,28 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
+		#' Set max size of log file.<br>
+		#' 
+		#' @param log.file.size.max Max size of log file in bytes
+		setMaxLogFileSize = function (log.file.size.max)
+			{
+			#========== Variable ==========
+			METHOD <- 'Logger.public.setMaxLogFileSize()'
+
+			#===== Check argument =====
+			if (is.integer(log.file.size.max)==TRUE 
+					&& log.file.size.max>0)
+				{
+				private$log.file.size.max <- log.file.size.max
+				}
+			#===== Argument error =====
+			else
+				{
+				self$error('Argument error! Indicated "log.file.size.max" is invalid value', METHOD)
+				}
+			},
+
+
 		#' Logs a message object with the TRACE level.<br>
 		#' 
 		#' @param log.message	Log message string
@@ -318,7 +368,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -352,7 +402,7 @@ Logger <- R6::R6Class("Logger",
 					}
 				else
 					{
-					private$print(message)
+					private$printMessage(message)
 					}
 				}
 			#===== In case of not appropriate =====
@@ -367,19 +417,32 @@ Logger <- R6::R6Class("Logger",
 	# Private variables & methods
 	#===========================================================================
 	private = list(
-		file.descriptor = NULL,		#' File descriptor
-		file.path = NULL,			#' File path string
-		logger.name = NULL,			#' The name of logger object
-		log.filepath = NULL,		#' Log file pathname string
-		log.level = 0,				#' Log level number
+		file.descriptor = NULL,			#' File descriptor
+		logger.name = NULL,				#' The name of logger object
+		log.file.path = NULL,			#' Log file pathname string
+ 		log.file.size.max = 8388608,	#' Log file max size
+		log.level = 0,					#' Log level number
+
+
+		#' 
+		#' 
+		#' @return true: , false: 
+		checkLogFileSize = function ()
+			{
+			if (private$getLofFileSize()<private$log.file.size.max)
+				{
+				return(TRUE)
+				}
+			else
+				{
+				return(FALSE)
+				}
+			},
 
 
 		#' This method closes the opened file descriptor.<br>
 		closeFile = function ()
 			{
-			#========== Variable ==========
-			METHOD <- "Logger.private.closeFile()"
-
 			#===== Check existence of file descriptor =====
 			if (is.null(private$file.descriptor)==FALSE)
 				{
@@ -387,35 +450,39 @@ Logger <- R6::R6Class("Logger",
 					{
 					#===== Close file descriptor =====
 					close(private$file.descriptor)
+					private$printMessage('Now closed log file')
 					},
 				#===== Error handling =====
 				error = function(e)
 					{
-					private$print(e$message)
+					private$printMessage(e$message)
 					},
 				#===== Warning handling =====
 				warning = function(e)
 					{
-					private$print(e$message)
+					private$printMessage(e$message)
 					},
 				#===== finalization =====
 				finally =
 					{
-					#===== Initialize file descriptor =====
+					#===== Initialize private variables =====
 					private$file.descriptor <- NULL
+					private$logger.name <- NULL
+					private$log.file.path <- NULL
 					},
 				silent = TRUE)
 				}
 			#===== In the case of not existing file descriptor =====
 			else
 				{
+				private$printMessage('There is not opened log file')
 				}
 			},
 
 
 		#' Returns a file descriptor owned by this class.<br>
 		#' 
-		#' @return	File descriptor
+		#' @return	File descriptor or NULL(= no use log file)
 		getFileDescriptor = function ()
 			{
 			return(private$file.descriptor)
@@ -427,7 +494,89 @@ Logger <- R6::R6Class("Logger",
 		#' @return	Log file pathname string or NULL
 		getLogFilepath = function ()
 			{
-			return(private$log.filepath)
+			return(private$log.file.path)
+			},
+
+
+		#' Get log file size in bytes.<br>
+		#' 
+		#' @return File size in bytes
+		getLofFileSize = function ()
+			{
+			#========== Variable ==========
+			file <- NULL
+			LOG_FILE_PATH <- private$getLogFilepath()
+
+			#===== In the case of existing log file pathname string =====
+			if (is.null(LOG_FILE_PATH)==FALSE)
+				{
+				#===== Get log file information =====
+				file <- file.info(LOG_FILE_PATH)
+				#===== Return log file size in bytes =====
+				return(file$size)
+				}
+			#===== In the case of not existing =====
+			else
+				{
+				return(0)
+				}
+			},
+
+
+		#' Create old log file pathname string based on current file.<br>
+		#' 
+		#' @param log.file.path.current	Current log file pathname string
+		#' @return						Old log file pathname string
+		getOldLogFilePath = function (log.file.path.current)
+			{
+			parent.directory.path <- NULL
+			log.file.name.base <- NULL
+			log.file.regular.expression <- NULL
+			log.file.list <- NULL
+			log.file.list.number <- 0
+			log.file.name.old <- NULL
+			log.file.path.old <- NULL
+			LOG_FILE_EXTENSION <- '.log'
+
+			#=====  =====
+			if (is.null(log.file.path.current)==FALSE 
+					&& file.exists(log.file.path.current)==TRUE)
+				{
+				#=====  =====
+				parent.directory.path <- dirname(log.file.path.current)
+				#=====  =====
+				log.file.name.base <- substr(basename(log.file.path.current), 1, nchar(basename(log.file.path.current)) - nchar(LOG_FILE_EXTENSION))
+				#=====  =====
+				log.file.regular.expression <- paste(log.file.name.base, '[0-9].*', sep = '_')
+				log.file.regular.expression <- paste(log.file.regular.expression, LOG_FILE_EXTENSION, sep = '\\')
+				#=====  =====
+				log.file.list <- list.files(parent.directory.path,
+						pattern = log.file.regular.expression,
+#						all.files = FALSE,
+						recursive = FALSE,
+						include.dirs = FALSE
+				)
+				#=====  =====
+				if (is.null(log.file.list)==TRUE)
+					{
+					}
+				#=====  =====
+				else
+					{
+					log.file.list.number <- length(log.file.list)
+					}
+				#=====  =====
+				log.file.name.old <- paste(log.file.name.base, log.file.list.number, sep = '_')
+				log.file.name.old <- paste(log.file.name.old, LOG_FILE_EXTENSION, sep = '')
+				log.file.path.old <- paste(parent.directory.path, log.file.name.old, sep = '/')
+				#=====  =====
+				return(log.file.path.old)
+				}
+			#=====  =====
+			else
+				{
+				return(NULL)
+				}
 			},
 
 
@@ -450,7 +599,7 @@ Logger <- R6::R6Class("Logger",
 		openFile = function (file.path, append = TRUE)
 			{
 			#========== Variable ==========
-			METHOD <- "Logger.private.openFile()"
+			METHOD <- 'Logger.private.openFile()'
 
 			#===== Check argument =====
 			if (is.null(file.path)==FALSE)
@@ -460,28 +609,28 @@ Logger <- R6::R6Class("Logger",
 					if (append==TRUE)
 						{
 						#===== Open file descriptor in "a+" mode =====
-						private$file.descriptor <- file(file.path, open = "a+")
+						private$file.descriptor <- file(file.path, open = 'a+')
 						}
 					else
 						{
 						#===== Open file descriptor in "w+" mode =====
-						private$file.descriptor <- file(file.path, open = "w+")
+						private$file.descriptor <- file(file.path, open = 'w+')
 						}
-					#===== Set file pathname string =====
-					private$setFilePath(file.path)
-					self$info("Now opened log file", METHOD)
+					self$info('Now opened log file', METHOD)
+					#===== Set log file pathname string into internal variable =====
+					private$log.file.path <- file.path
 					},
 				#===== Error handling =====
 				error = function(e)
 					{
-					private$print(e$message)
+					private$printMessage(e$message)
 					#===== Initialize file descriptor =====
 					private$file.descriptor <- NULL
 					},
 				#===== Warning handling =====
 				warning = function(e)
 					{
-					private$print(e$message)
+					private$printMessage(e$message)
 					#===== Initialize file descriptor =====
 					private$file.descriptor <- NULL
 					},
@@ -494,7 +643,7 @@ Logger <- R6::R6Class("Logger",
 			#===== Argument error =====
 			else
 				{
-				self$error("Argument error! Indicated \"file.path\" is NULL", METHOD)
+				self$error('Argument error! Indicated "file.path" is NULL', METHOD)
 				}
 			},
 
@@ -502,21 +651,34 @@ Logger <- R6::R6Class("Logger",
 		#' Show the message string in standard IO.<br>
 		#' 
 		#' @param log.message	Log message string
-		print = function (log.message)
+		printMessage = function (log.message)
 			{
 			print(log.message)
 			},
 
 
-		#' Set argument into the private variable as file pathname string.<br>
-		#' 
-		#' @param file.path A file pathname string
-		setFilePath = function (file.path)
+		#' Rotate log file because of exceeding the file size.<br>
+		rotateLogFile = function ()
 			{
-			if (is.null(file.path)==FALSE && is.character(file.path)==TRUE)
+			#========== Variable ==========
+			file.descriptor <- private$getFileDescriptor()
+			LOG_FILE_PATH_CURRENT <- private$getLogFilepath()
+			LOG_FILE_PATH_OLD <- private$getOldLogFilePath(LOG_FILE_PATH_CURRENT)
+
+			#=====  =====
+			if (is.null(LOG_FILE_PATH_CURRENT)==FALSE 
+					&& is.null(LOG_FILE_PATH_OLD)==FALSE 
+					&& file.exists(LOG_FILE_PATH_CURRENT)==TRUE 
+					&& is.null(file.descriptor)==FALSE)
 				{
-				private$file.path <- file.path
+				#===== Close file descriptor =====
+				private$closeFile()
+				#===== Rename the log file =====
+				file.rename(LOG_FILE_PATH_CURRENT, LOG_FILE_PATH_OLD)
+				#===== Open & Set log file =====
+				self$setLogFilePath(LOG_FILE_PATH_CURRENT)
 				}
+			#=====  =====
 			else
 				{
 				}
@@ -544,22 +706,65 @@ Logger <- R6::R6Class("Logger",
 			#===== Error handling =====
 			error = function(e)
 				{
-				private$print(e$message)
+				private$printMessage(e$message)
 				},
 			#===== Warning handling =====
 			warning = function(e)
 				{
-				private$print(e$message)
+				private$printMessage(e$message)
 				},
 			#===== finalization =====
 			finally =
 				{
-				#=====  =====
+				#===== In the case of begin within the specified file size =====
+				if (private$checkLogFileSize()==TRUE)
+					{
+					# do nothing
+					}
+				#===== In the case of exceeding the file size =====
+				else
+					{
+					private$printMessage('The log file size exceeds max size')
+					#===== Rotate log file =====
+					private$rotateLogFile()
+					}
 				},
 			silent = TRUE)
 			}
 	)
 )
+
+
+#===============================================================================
+# for Debug
+#===============================================================================
+#Logger$debug("initialize")
+#Logger$debug("finalize")
+#Logger$debug("createNewLogMessage")
+#Logger$debug("debug")
+#Logger$debug("error")
+#Logger$debug("fatal")
+#Logger$debug("getLoggerName")
+#Logger$debug("getLogLevel")
+#Logger$debug("info")
+#Logger$debug("setLoggerName")
+#Logger$debug("setLogFilePath")
+#Logger$debug("setLogLevel")
+#Logger$debug("setMaxLogFileSize")
+#Logger$debug("trace")
+#Logger$debug("warn")
+
+#Logger$debug("checkLogFileSize")
+#Logger$debug("closeFile")
+#Logger$debug("getFileDescriptor")
+#Logger$debug("getLogFilepath")
+#Logger$debug("getLofFileSize")
+#Logger$debug("getOldLogFilePath")
+#Logger$debug("getTime")
+#Logger$debug("openFile")
+#Logger$debug("printMessage")
+Logger$debug("rotateLogFile")
+#Logger$debug("writeMessage")
 
 
 
