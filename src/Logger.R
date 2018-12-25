@@ -247,24 +247,37 @@ Logger <- R6::R6Class("Logger",
 		#' @param log.file.path		Log file pathname string
 		setLogFilePath = function (log.file.path)
 			{
+			#========== Variable ==========
+			message <- NULL
+			METHOD <- 'Logger.public.setLogFilePath()'
+			LOG_LINE <- 1
+
 			#===== Check argument =====
 			if (is.null(log.file.path)==FALSE 
 					&& is.character(log.file.path)==TRUE)
 				{
 				tryCatch(
 					{
+					#===== Check the existence of parent directory =====
+					private$getParentDirectoryPath(log.file.path)
 					#===== Open file descriptor =====
 					private$openFile(log.file.path)
 					},
 				#===== Error handling =====
 				error = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_ERROR, e$message, METHOD, LOG_LINE)
+					#===== Print error message =====
+					private$printMessage(message)
 					},
 				#===== Warning handling =====
 				warning = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_WARN, e$message, METHOD, LOG_LINE)
+					#===== Print warn message =====
+					private$printMessage(message)
 					},
 				#===== finalization =====
 				finally =
@@ -275,7 +288,10 @@ Logger <- R6::R6Class("Logger",
 			#===== Argument error =====
 			else
 				{
-				private$printMessage('Argument error! Indicated "log.file.path" variable is invalid')
+				#===== Create new log message =====
+				message <- self$createNewLogMessage(self$LEVEL_ERROR, 'Argument error! Indicated "log.file.path" variable is invalid', METHOD, LOG_LINE)
+				#===== Print error message =====
+				private$printMessage(message)
 				}
 			},
 
@@ -443,6 +459,11 @@ Logger <- R6::R6Class("Logger",
 		#' This method closes the opened file descriptor.<br>
 		closeFile = function ()
 			{
+			#========== Variable ==========
+			message <- NULL
+			METHOD <- 'Logger.private.closeFile()'
+			LOG_LINE <- 1
+
 			#===== Check existence of file descriptor =====
 			if (is.null(private$file.descriptor)==FALSE)
 				{
@@ -450,17 +471,26 @@ Logger <- R6::R6Class("Logger",
 					{
 					#===== Close file descriptor =====
 					close(private$file.descriptor)
-					private$printMessage('Now closed log file')
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_INFO, 'Now closed log file', METHOD, LOG_LINE)
+					#===== Print info message =====
+					private$printMessage(message)
 					},
 				#===== Error handling =====
 				error = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_ERROR, e$message, METHOD, LOG_LINE)
+					#===== Print error message =====
+					private$printMessage(message)
 					},
 				#===== Warning handling =====
 				warning = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_WARN, e$message, METHOD, LOG_LINE)
+					#===== Print warn message =====
+					private$printMessage(message)
 					},
 				#===== finalization =====
 				finally =
@@ -475,7 +505,10 @@ Logger <- R6::R6Class("Logger",
 			#===== In the case of not existing file descriptor =====
 			else
 				{
-				private$printMessage('There is not opened log file')
+				#===== Create new log message =====
+				message <- self$createNewLogMessage(self$LEVEL_WARN, 'There is not opened log file', METHOD, LOG_LINE)
+				#===== Print warn message =====
+				private$printMessage(message)
 				}
 			},
 
@@ -543,7 +576,7 @@ Logger <- R6::R6Class("Logger",
 					&& file.exists(log.file.path.current)==TRUE)
 				{
 				#=====  =====
-				parent.directory.path <- dirname(log.file.path.current)
+				parent.directory.path <- private$getParentDirectoryPath(log.file.path.current)
 				#=====  =====
 				log.file.name.base <- substr(basename(log.file.path.current), 1, nchar(basename(log.file.path.current)) - nchar(LOG_FILE_EXTENSION))
 				#=====  =====
@@ -580,6 +613,51 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
+		#' Get the parent direkutory pathname string.<br>
+		#' 
+		#' @param path	a child file or directory pathname string
+		#' @return		parent directory pathname string or NULL(means error)
+		getParentDirectoryPath = function (path)
+			{
+			#========== Variable ==========
+			parent.directory.path <- NULL
+			message <- NULL
+			METHOD <- 'Logger.private.getParentDirectoryPath()'
+			LOG_LINE <- 1
+
+			#===== Check argument =====
+			if (is.null(path)==FALSE)
+				{
+				#===== Get parent directory =====
+				parent.directory.path <- dirname(path)
+				#===== In the case of existing parent directory =====
+				if (dir.exists(parent.directory.path)==TRUE)
+					{
+					return(parent.directory.path)
+					}
+				#===== In the case of not existing parent directory =====
+				else
+					{
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_INFO, 'Now create parent directory recursively', METHOD, LOG_LINE)
+					#===== Print error message =====
+					private$printMessage(message)
+					#===== Create new parent directory =====					
+					dir.create(parent.directory.path, recursive = TRUE)
+					return(parent.directory.path)
+					}
+				}
+			#===== Argument error =====
+			else
+				{
+				#===== Create new log message =====
+				message <- self$createNewLogMessage(self$LEVEL_ERROR, 'Argument error! Indicated \"path\" string is NULL', METHOD, LOG_LINE)
+				#===== Print error message =====
+				private$printMessage(message)
+				}
+			},
+
+
 		#' Returns current time in milliseconds
 		#' 
 		#' @return	Current time in milliseconds
@@ -599,7 +677,9 @@ Logger <- R6::R6Class("Logger",
 		openFile = function (file.path, append = TRUE)
 			{
 			#========== Variable ==========
+			message <- NULL
 			METHOD <- 'Logger.private.openFile()'
+			LOG_LINE <- 1
 
 			#===== Check argument =====
 			if (is.null(file.path)==FALSE)
@@ -623,14 +703,20 @@ Logger <- R6::R6Class("Logger",
 				#===== Error handling =====
 				error = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_ERROR, e$message, METHOD, LOG_LINE)
+					#===== Print error message =====
+					private$printMessage(message)
 					#===== Initialize file descriptor =====
 					private$file.descriptor <- NULL
 					},
 				#===== Warning handling =====
 				warning = function(e)
 					{
-					private$printMessage(e$message)
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_WARN, e$message, METHOD, LOG_LINE)
+					#===== Print warn message =====
+					private$printMessage(message)
 					#===== Initialize file descriptor =====
 					private$file.descriptor <- NULL
 					},
@@ -692,7 +778,9 @@ Logger <- R6::R6Class("Logger",
 			{
 			#========== Variable ==========
 			connection <- NULL
+			message <- NULL
 			METHOD <- "Logger.private.writeMessage()"
+			LOG_LINE <- 1
 
 			tryCatch(
 				{
@@ -706,12 +794,18 @@ Logger <- R6::R6Class("Logger",
 			#===== Error handling =====
 			error = function(e)
 				{
-				private$printMessage(e$message)
+				#===== Create new log message =====
+				message <- self$createNewLogMessage(self$LEVEL_ERROR, e$message, METHOD, LOG_LINE)
+				#===== Print error message =====
+				private$printMessage(message)
 				},
 			#===== Warning handling =====
 			warning = function(e)
 				{
-				private$printMessage(e$message)
+				#===== Create new log message =====
+				message <- self$createNewLogMessage(self$LEVEL_WARN, e$message, METHOD, LOG_LINE)
+				#===== Print warn message =====
+				private$printMessage(message)
 				},
 			#===== finalization =====
 			finally =
@@ -724,7 +818,10 @@ Logger <- R6::R6Class("Logger",
 				#===== In the case of exceeding the file size =====
 				else
 					{
-					private$printMessage('The log file size exceeds max size')
+					#===== Create new log message =====
+					message <- self$createNewLogMessage(self$LEVEL_WARN, 'The log file size exceeds max size', METHOD, LOG_LINE)
+					#===== Print warn message =====
+					private$printMessage(message)
 					#===== Rotate log file =====
 					private$rotateLogFile()
 					}
