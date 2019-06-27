@@ -34,21 +34,32 @@ Logger <- R6::R6Class("Logger",
 	# Public variables & methods
 	#===========================================================================
 	public = list(
-		LEVEL_TRACE = 'TRACE',		# TRACE level indicator
-		LEVEL_DEBUG = 'DEBUG',		# DEBUG level indicator
-		LEVEL_INFO = 'INFO',		# INFO level indicator
-		LEVEL_WARN = 'WARN',		# WARN level indicator
-		LEVEL_ERROR = 'ERROR',		# ERROR level indicator
-		LEVEL_FATAL = 'FATAL',		# FATAL level indicator
+		LEVEL_TRACE = 'TRACE',		#' TRACE level indicator
+		LEVEL_DEBUG = 'DEBUG',		#' DEBUG level indicator
+		LEVEL_INFO = 'INFO',		#' INFO level indicator
+		LEVEL_WARN = 'WARN',		#' WARN level indicator
+		LEVEL_ERROR = 'ERROR',		#' ERROR level indicator
+		LEVEL_FATAL = 'FATAL',		#' FATAL level indicator
 
 
 		#' Constructor.<br>
 		#' 
-		#' @param config.file
-		initialize = function ()
+		#' @param config.file.path	Configuration file pathname string
+		initialize = function (config.file.path = NULL)
 			{
-			#===== Set default log level =====
-			self$setLogLevel(self$LEVEL_INFO)
+			#===== In case of set configuration file path =====
+			if (is.null(config.file.path)==FALSE 
+					&& is.character(config.file.path)==TRUE)
+				{
+				#===== Parse config file =====
+				private$parseConfigFile(config.file.path)
+				}
+			#===== In case of not set configuration file path =====
+			else
+				{
+				#===== Execute default initialization =====
+				private$defaultInit()
+				}
 			},
 
 
@@ -670,6 +681,14 @@ Logger <- R6::R6Class("Logger",
 			},
 
 
+		#' 
+		defaultInit = function ()
+			{
+			#===== Set default log level =====
+			self$setLogLevel(self$LEVEL_INFO)
+			},
+
+
 		#' Opens file descriptor owned by this class.<br>
 		#' 
 		#' @param file.path	File pathname string
@@ -730,6 +749,38 @@ Logger <- R6::R6Class("Logger",
 			else
 				{
 				self$error('Argument error! Indicated "file.path" is NULL', METHOD)
+				}
+			},
+
+
+		#' Parse indicated configuration file and store the parameters in class variable.<br>
+		#' 
+		#' Caller must set the configuration file format into "TSV" which<br>
+		#' is similar to the "CSV" file and "key" and "value" data are<br>
+		#' separated by TAB(="\t").<br>
+		#' 
+		#' @param config.file.path	Configuration file pathname string
+		parseConfigFile = function (config.file.path)
+			{
+			#========== Variable ==========
+			config <- NULL
+			TSV_FILE_EXTENSION <- '.tsv'
+			TAB <- '\t'
+
+			#===== Check argument =====
+			if (is.null(config.file.path)==FALSE 
+					&& is.character(config.file.path)==TRUE 
+					&& file.exists(config.file.path)==TRUE 
+			)
+				{
+				#===== Get configuration data =====
+				config <- read.delim(config.file.path, header = TRUE, sep = TAB, stringsAsFactor = FALSE)
+				}
+			#===== Argument error =====
+			else
+				{
+				#===== Execute default initialization =====
+				private$defaultInit()
 				}
 			},
 
